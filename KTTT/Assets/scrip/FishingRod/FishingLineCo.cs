@@ -25,31 +25,50 @@ public class FishingLineCo : MonoBehaviour
     //How fast we can add more/less rope
     float winchSpeed = 2f;
 
+    [SerializeField] private bool isFloaterFishingRod = false;
+
     private List<RopeSegment> ropeSegments = new List<RopeSegment>();
     private float ropeSegmentLeght = 0.25f;
     private int segmentCount = 20;
     private float lineWidth = 0.01f;
 
+
     //The joint we use to approximate the rope
     private SpringJoint springJoint;
+    private Rigidbody rbWhatIsHangingFromTheRope;
+
+    private Rigidbody rbCast;
 
     private bool isCastFishingRod = false;
     private Buoyancy buoyancyController = null;
+    private bool isReadyFishinfRod = true;
 
     void Start()
     {
         ropeLength = readyRopeLength;
+
+        rbWhatIsHangingFromTheRope = whatIsHangingFromTheRope.GetComponentInParent<Rigidbody>();
+
         springJoint = whatTheRopeIsConnectedTo.GetComponentInParent<SpringJoint>();
         springJoint.anchor = whatTheRopeIsConnectedTo.localPosition;
         springJoint.connectedAnchor = whatIsHangingFromTheRope.localPosition;
 
-        buoyancyController = GetComponentInParent<Buoyancy>();
+        buoyancyController = whatIsHangingFromTheRope.GetComponentInParent<Buoyancy>();
+        rbCast = rbWhatIsHangingFromTheRope;
+
+        if (isFloaterFishingRod)
+        {
+            rbCast = whatIsHangingFromTheRope.gameObject.GetComponentInParent<FishingLineCo>().
+                whatIsHangingFromTheRope.gameObject.GetComponentInParent<Rigidbody>();
+
+            buoyancyController = rbCast.gameObject.GetComponent<Buoyancy>();
+        }
 
         //Init the line renderer we use to display the rope
         lineRenderer = GetComponentInParent<LineRenderer>();
 
         Vector3 ropeStartPoint = Vector3.zero;
-        segmentCount = (int)(ropeLength *(1f/ ropeSegmentLeght)) +1;
+        segmentCount = (int)(ropeLength * (1f / ropeSegmentLeght)) + 1;
         for (int i = 0; i < segmentCount; i++)
         {
             ropeSegments.Add(new RopeSegment(ropeStartPoint));
@@ -60,46 +79,55 @@ public class FishingLineCo : MonoBehaviour
         UpdateSpring();
 
         //Add the weight to what the rope is carrying
-        whatIsHangingFromTheRope.GetComponentInParent<Rigidbody>().mass = loadMass;
+        rbWhatIsHangingFromTheRope.mass = loadMass;
     }
 
     void Update()
     {
-        if (whatIsHangingFromTheRope.GetComponentInParent<Rigidbody>().velocity.magnitude > 5f)
-            whatIsHangingFromTheRope.GetComponentInParent<Rigidbody>().drag = 0.5f;
-        else
-            whatIsHangingFromTheRope.GetComponentInParent<Rigidbody>().drag = 0f;
+        if(isReadyFishinfRod)
+        {
+            if (rbWhatIsHangingFromTheRope.velocity.magnitude > 5f)
+                rbWhatIsHangingFromTheRope.drag = 0.5f;
+            else
+                rbWhatIsHangingFromTheRope.drag = 0f;
+        }
 
+
+        // Kiểm tra nếu phao dưới nước và đang quăng cần
         if (buoyancyController != null && buoyancyController.GetIsUnderWater() && isCastFishingRod)
         {
             isCastFishingRod = false;
 
             float distance = Vector3.Distance(whatTheRopeIsConnectedTo.position, whatIsHangingFromTheRope.position);
+            Debug.Log(distance);
 
+            // Cập nhật chiều dài dây câu nếu phao dưới nước
             ropeLength = distance + 1f;
             ropeLength = Mathf.Clamp(ropeLength, minRopeLength, maxRopeLength);
 
             UpdateSpring();
         }
 
+        // Tiến hành cập nhật thông tin dây câu
         InitRope();
-        //Display the rope with a line renderer
         DisplayRope();
     }
+
 
     private void FixedUpdate()
     {
         //Add more/less rope
-        UpdateWinch();
+        //UpdateWinch();
 
         Simulation();
     }
 
+    #region Rope;
     private void InitRope()
     {
 
 
-        int tempSegmentCount = (int)(ropeLength * (1f / ropeSegmentLeght)) +1;
+        int tempSegmentCount = (int)(ropeLength * (1f / ropeSegmentLeght)) + 1;
         if (tempSegmentCount > ropeSegments.Count)
         {
             Vector3 ropeStarPoint = ropeSegments[ropeSegments.Count - 1].posNow;
@@ -124,9 +152,9 @@ public class FishingLineCo : MonoBehaviour
             currentSegment.posOld = currentSegment.posNow;
 
             RaycastHit hit;
-            if(Physics.Raycast(currentSegment.posNow, -Vector3.up, out hit, 0.1f))
+            if (Physics.Raycast(currentSegment.posNow, -Vector3.up, out hit, 0.1f))
             {
-                if(hit.collider != null)
+                if (hit.collider != null)
                 {
                     velocity = Vector3.zero;
                     forceGravity.y = 0f;
@@ -194,8 +222,8 @@ public class FishingLineCo : MonoBehaviour
         lineRenderer.startWidth = lineWidth;
         lineRenderer.endWidth = lineWidth;
 
-        Vector3[] ropePositons = new Vector3[segmentCount];
-        for (int i = 0; i < segmentCount; i++)
+        Vector3[] ropePositons = new Vector3[ropeSegments.Count];
+        for (int i = 0; i < ropeSegments.Count; i++)
         {
             ropePositons[i] = ropeSegments[i].posNow;
         }
@@ -251,26 +279,49 @@ public class FishingLineCo : MonoBehaviour
         springJoint.maxDistance = ropeLength;
     }
 
+    #endregion
+
+
     public void CastFishingRod(float percentCast, Vector3 vec)
     {
-        if (isCastFishingRod)
-            return;
-        float castPower = 5000f;
-        float currenCastPower = castPower * percentCast /100f;
+        if (isCastFishingRod || buoyancyController == null || buoyancyController.GetIsUnderWater())
+            return; // Không quăng cần nếu phao dưới nước hoặc cần đã quăng
 
+        float castPower = 5000f;
+        float currenCastPower = castPower * percentCast / 100f;
         float maxCastLength = 50f;
+
         ropeLength = maxCastLength * percentCast / 100f;
         ropeLength = Mathf.Clamp(ropeLength, minRopeLength, maxCastLength);
 
         InitRope();
         UpdateSpring();
 
-        whatIsHangingFromTheRope.GetComponentInParent<Rigidbody>().AddForce(vec * currenCastPower);
-        
+        rbCast.AddForce((vec) * currenCastPower);
+
         isCastFishingRod = true;
     }
 
-    #region Telescop
+    public bool GetIsReady()
+    {
+        if (!isCastFishingRod)
+        {
+            if (ropeLength + rbWhatIsHangingFromTheRope.gameObject.GetComponent<FishingLineCo>().GetRopeLength()
+                <= readyRopeLength)
+                return true;
+            return false;
+        }
+        if (ropeLength <= readyRopeLength)
+            return true;
+        return false;
+    }
+
+    public void SetIsReadyFishinfRod(bool isReady)
+    {
+        isReadyFishinfRod = isReady;
+    }
+
+    #region Floater
 
     public float GetRopeLength()
     {
@@ -284,30 +335,67 @@ public class FishingLineCo : MonoBehaviour
         UpdateSpring();
     }
     //Add more/less rope
-    private void UpdateWinch()
+    public void UpdateWinch(bool invert)
     {
         bool hasChangedRope = false;
 
         //More rope
-        if (Input.GetKey(KeyCode.O) && ropeLength < maxRopeLength)
+        if (invert && ropeLength < maxRopeLength)
         {
             ropeLength += winchSpeed * Time.deltaTime;
 
             InitRope();
 
             //!!!!!!
-            whatIsHangingFromTheRope.gameObject.GetComponentInParent<Rigidbody>().WakeUp();
+            rbWhatIsHangingFromTheRope.WakeUp();
 
             hasChangedRope = true;
         }
-        else if (Input.GetKey(KeyCode.I) && ropeLength > minRopeLength)
+        else if (!invert && ropeLength > minRopeLength)
         {
             ropeLength -= winchSpeed * Time.deltaTime;
 
             InitRope();
 
             //!!!!!!
-            whatIsHangingFromTheRope.gameObject.GetComponentInParent<Rigidbody>().WakeUp();
+            rbWhatIsHangingFromTheRope.WakeUp();
+
+            hasChangedRope = true;
+        }
+
+
+        if (hasChangedRope)
+        {
+            ropeLength = Mathf.Clamp(ropeLength, minRopeLength, maxRopeLength);
+
+            //Need to recalculate the k-value because it depends on the length of the rope
+            UpdateSpring();
+        }
+    }
+    public void UpdateFloaterDepth(bool isUp)
+    {
+        bool hasChangedRope = false;
+
+        //More rope
+        if (isUp && ropeLength < maxRopeLength)
+        {
+            ropeLength += winchSpeed * Time.deltaTime;
+
+            InitRope();
+
+            //!!!!!!
+            rbWhatIsHangingFromTheRope.WakeUp();
+
+            hasChangedRope = true;
+        }
+        else if (!isUp && ropeLength > minRopeLength)
+        {
+            ropeLength -= winchSpeed * Time.deltaTime;
+
+            InitRope();
+
+            //!!!!!!
+            rbWhatIsHangingFromTheRope.WakeUp();
 
             hasChangedRope = true;
         }

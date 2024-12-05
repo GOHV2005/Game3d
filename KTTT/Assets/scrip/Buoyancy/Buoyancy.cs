@@ -12,7 +12,7 @@ public class Buoyancy : MonoBehaviour
     [SerializeField] private float defaultDrag = 0f;
     [SerializeField] private float defaultAngularDrag = 0.05f;
 
-    private bool isUnderWater = false;
+    [SerializeField]private bool isUnderWater = false;
 
     private Rigidbody rb;
 
@@ -35,12 +35,16 @@ public class Buoyancy : MonoBehaviour
                 isUnderWater = true; // Nếu bất kỳ floater nào chìm, thì cả đối tượng được coi là chìm
         }
 
-        // Thiết lập trạng thái vật lý
+        // Cập nhật trạng thái vật lý
         SetState(isUnderWater);
+
+        // Cập nhật biến isUnderWater trong lớp
+        this.isUnderWater = isUnderWater;
     }
 
     private void SetState(bool isUnderWater)
     {
+        this.isUnderWater = isUnderWater;  // Lưu trạng thái có đang ở dưới nước hay không
         if (isUnderWater)
         {
             rb.drag = underWaterDrag;
@@ -57,6 +61,8 @@ public class Buoyancy : MonoBehaviour
     {
         return isUnderWater;
     }
+
+
 }
 
 [System.Serializable]
