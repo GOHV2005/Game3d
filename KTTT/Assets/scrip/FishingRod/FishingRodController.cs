@@ -22,7 +22,7 @@ public class FishingRodController : MonoBehaviour
     //Mass of what the rope is carrying
     private float loadMass = 3f;
     //How fast we can add more/less rope
-    float winchSpeed = 2f;
+    float winchSpeed = 5f;
 
     [SerializeField] private bool isFloaterFishingRod = false;
 
@@ -116,8 +116,6 @@ public class FishingRodController : MonoBehaviour
     #region Rope;
     private void InitRope()
     {
-
-
         int tempSegmentCount = (int)(ropeLength * (1f / ropeSegmentLeght)) + 1;
         if (tempSegmentCount > ropeSegments.Count)
         {
@@ -132,6 +130,7 @@ public class FishingRodController : MonoBehaviour
             ropeSegments.RemoveAt(ropeSegments.Count - 1);
         }
     }
+
     private void Simulation()
     {
         Vector3 forceGravity = new Vector3(0f, -1f, 0f);
@@ -318,16 +317,21 @@ public class FishingRodController : MonoBehaviour
         float currenCastPower = castPower * percentCast / 100f;
         float maxCastLength = 50f;
 
+        // Cập nhật chiều dài dây câu
         ropeLength = maxCastLength * percentCast / 100f;
         ropeLength = Mathf.Clamp(ropeLength, minRopeLength, maxCastLength);
 
         InitRope();
         UpdateSpring();
 
-        rbCargo.AddForce((vec + new Vector3(0f, 0.5f, 0f)) * currenCastPower);
+        // Quăng cần câu theo hướng vuông góc với nhân vật
+        // Quăng sang phải và lên trên
+        rbCargo.AddForce((transform.right + transform.up) * currenCastPower);
 
-        isCastFishingRod = true;
     }
+
+
+
 
     public bool GetIsReady(float floaterDepth  = 0)
     {

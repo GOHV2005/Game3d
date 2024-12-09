@@ -4,21 +4,17 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [Header("Player info")]
-    [SerializeField] private float mouseSencitivity = 10f;
-    [SerializeField] private float cameraLimitAngle = 70f;
 
     [Header("UI info")]
-    [SerializeField]private CastUiController castUiController;
+    [SerializeField] private CastUiController castUiController;
 
     private Vector3 velocity = Vector3.zero;
     private Vector3 move = Vector3.zero;
     float xRotation = 0f;
-    private Camera playerCamera;
     private CharacterController characterController;
     private GameInput gameInput;
     private Buoyancy buoyancyController;
-    [SerializeField]private float currentCastPower = 0f;
+    [SerializeField] private float currentCastPower = 0f;
     private float factorCastPower = 100f;
 
     [SerializeField] private FishingRodController fishingrodController = null;
@@ -42,57 +38,48 @@ public class PlayerController : MonoBehaviour
 
     private void Start()
     {
-        playerCamera = Camera.main;
         characterController = GetComponent<CharacterController>();
 
         fishingrodController.SetCargoRigidbody(cargoController.gameObject.GetComponent<Rigidbody>());
         fishingrodController.SetCargoBuoyancyController(cargoController.gameObject.GetComponent<Buoyancy>());
     }
+
     private void Update()
     {
         switch (gameState)
         {
             case GameSate.noCollect:
-                looking();
+                looking(); // Nếu cần, bạn có thể bỏ qua phần này
                 break;
             case GameSate.isReady:
-                looking();
+                looking(); // Bạn có thể bỏ qua đây nếu không cần điều khiển camera
                 SetFloaterDepth();
-                //CastFihingRod();
-
                 if (gameInput.Game.Cast.WasPressedThisFrame())
                 {
                     gameState = GameSate.isCast;
                     castUiController.SetCastSliderActive(true);
-
                     SetIsReadyAll(false);
                 }
                 break;
             case GameSate.isCast:
                 CastFihingRod();
-                looking();
+                looking(); // Bỏ qua điều khiển camera nếu không cần
                 break;
             case GameSate.isWater:
                 FishingRodHooking();
                 WindingFishingRod();
-                looking();
+                looking(); // Bỏ qua điều khiển camera nếu không cần
                 break;
             default:
                 break;
         }
     }
 
-        private void looking()
+    private void looking()
     {
-        Vector2 mouseAxis = gameInput.Game.Looking.ReadValue<Vector2>() * Time.smoothDeltaTime;
-        float mouseX = mouseAxis.x * mouseSencitivity;
-        float mouseY = mouseAxis.y * mouseSencitivity;
-
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -cameraLimitAngle, cameraLimitAngle);
-        playerCamera.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-        transform.Rotate(Vector3.up * mouseX);
+        // Bỏ qua việc điều khiển camera và góc nhìn nếu không cần thiết
     }
+
     private void FishingRodHooking()
     {
         if (gameInput.Game.Hooking.IsPressed())
@@ -101,40 +88,30 @@ public class PlayerController : MonoBehaviour
         }
         else if (gameInput.Game.Hooking.WasPerformedThisFrame())
         {
-
+            // Xử lý hook khi cần
         }
     }
 
     private void WindingFishingRod()
     {
-        if (gameInput.Game.Winding.IsPressed())
+        // Kiểm tra nếu trong trạng thái isWater và người chơi nhấn phím thu dây
+        if (gameState == GameSate.isWater && gameInput.Game.Winding.IsPressed())
         {
+            
             fishingrodController.UpdateWinch(invertTemp);
         }
 
-        if(floaterController != null)
+        // Kiểm tra nếu đã thu dây về mức độ đủ sẵn sàng
+        if (floaterController != null)
         {
             if (fishingrodController.GetIsReady(floaterController.GetRopeLength()))
             {
                 gameState = GameSate.isReady;
-
-                SetIsReadyAll(true);
-
+                SetIsReadyAll(true); // Đặt tất cả thành sẵn sàng
             }
         }
-        else
-        {
-            if (fishingrodController.GetIsReady(floaterController.GetRopeLength()))
-            {
-                gameState = GameSate.isReady;
-
-                SetIsReadyAll(true);
-
-            }
-        }
-
-
     }
+
 
     private void SetFloaterDepth()
     {
@@ -159,15 +136,19 @@ public class PlayerController : MonoBehaviour
                 currentCastPower = 100f;
             castUiController.SetCastPowerSlider(currentCastPower);
         }
+
         if (gameInput.Game.Cast.WasPerformedThisFrame())
         {
             gameState = GameSate.isWater;
             castUiController.SetCastSliderActive(false);
-            fishingrodController.CastFishingRod(currentCastPower, transform.forward);
+
+            // Quăng cần câu theo hướng 90 độ so với hướng của nhân vật
+            fishingrodController.CastFishingRod(currentCastPower, transform.right);  // Quăng sang phải
+            // fishingrodController.CastFishingRod(currentCastPower, -transform.right); // Quăng sang trái
             currentCastPower = 0f;
         }
-
     }
+
     private void SetIsReadyAll(bool isReady)
     {
         if (fishingrodController != null)
@@ -191,5 +172,4 @@ public class PlayerController : MonoBehaviour
             //hookController.SetIsReadyFishinfRod(isReady);
         }
     }
-
 }
