@@ -5,64 +5,68 @@ using UnityEngine.UI;
 public class FishingMinigame : MonoBehaviour
 {
     // Các tham chiếu đến UI
-    public RectTransform fishingBar;   // Thanh điều khiển
-    public RectTransform catchBar;    // Khu vực bắt
-    public RectTransform sweetSpot;   // Vùng "Sweet Spot"
-    public Slider progressBar;        // Thanh tiến trình
+    public RectTransform fishingBar;
+    public RectTransform catchBar;
+    public RectTransform sweetSpot;
+    public Slider progressBar;
 
     // Các tham số điều chỉnh tốc độ
-    public float fishingBarSpeed = 200f;       // Tốc độ thanh điều khiển
-    public float sweetSpotSpeed = 50f;         // Tốc độ di chuyển Sweet Spot
-    public float sweetSpotSpeedIncreaseRate = 5f; // Tốc độ tăng dần của Sweet Spot
+    public float fishingBarSpeed = 200f;
+    public float sweetSpotSpeed = 50f;
+    public float sweetSpotSpeedIncreaseRate = 5f;
 
     // Tham chiếu đến UI
-    public GameObject minigameUI;      // Giao diện minigame
-    public GameObject fishingResultUI; // Giao diện kết quả
-    public Image fishingWinImage;      // Hình ảnh khi thắng
-    public Image fishingFailImage;     // Hình ảnh khi thua
+    public GameObject minigameUI;
+    public GameObject fishingResultUI;
+    public Image fishingWinImage;
+    public Image fishingFailImage;
+    public Button retryButton;
 
     // Thêm một mảng ảnh để hiển thị khi thắng
-    public Sprite[] fishingWinImages;  // Mảng ảnh thắng
+    public Sprite[] fishingWinImages; // Mảng ảnh thắng
+    private Image currentWinImage; // Biến để lưu ảnh thắng hiện tại
 
     // Các biến điều khiển
-    private bool isFishingBarInSweetSpot = false;  // Kiểm tra thanh điều khiển có trong Sweet Spot không
-    private bool isPlayerControlling = false;      // Kiểm tra người chơi có đang điều khiển không
-    private float progressBarSpeed = 0.1f;         // Tốc độ tăng/giảm của thanh tiến trình
+    private bool isFishingBarInSweetSpot = false;
+    private bool isPlayerControlling = false;
+    private float progressBarSpeed = 0.1f;
 
-    private bool isGameActive = true; // Trạng thái trò chơi đang hoạt động
+    public bool isGameActive = true; // Kiểm tra trò chơi có đang hoạt động không
 
     private void Start()
     {
-        fishingResultUI.SetActive(false); // Ẩn giao diện kết quả khi bắt đầu
+        fishingResultUI.SetActive(false);
+        retryButton.gameObject.SetActive(false);
+        retryButton.onClick.AddListener(RetryMinigame);
     }
 
     private void Update()
     {
         if (isGameActive)
         {
-            HandleFishingBar();        // Xử lý thanh điều khiển
-            HandleSweetSpot();         // Xử lý vùng Sweet Spot
-            CheckFishingBarInSweetSpot(); // Kiểm tra vị trí thanh điều khiển
-            UpdateProgressBar();       // Cập nhật thanh tiến trình
+            HandleFishingBar();
+            HandleSweetSpot();
+            CheckFishingBarInSweetSpot();
+            UpdateProgressBar();
         }
     }
 
     public void ActivateMinigame()
     {
-        // Bắt đầu minigame từ trạng thái ban đầu
-        minigameUI.SetActive(true);   // Hiển thị giao diện minigame
+        // Đảm bảo rằng minigame bắt đầu lại từ đầu và không hiển thị kết quả trước đó
+        minigameUI.SetActive(true);
 
-        // Reset giá trị cho lần chơi
-        fishingBar.anchoredPosition = Vector2.zero;  // Đặt thanh điều khiển về vị trí gốc
+        // Reset các giá trị cần thiết cho vòng chơi mới
+        fishingBar.anchoredPosition = Vector2.zero;  // Đặt lại vị trí của thanh câu
         progressBar.value = progressBar.minValue;    // Đặt lại thanh tiến trình về 0
-        sweetSpot.anchoredPosition = new Vector2(Random.Range(-100f, 100f), 0f); // Đặt vị trí Sweet Spot ngẫu nhiên
+        sweetSpot.anchoredPosition = new Vector2(Random.Range(-100f, 100f), 0f); // Đặt lại vị trí sweet spot
 
-        isGameActive = true; // Kích hoạt trò chơi
+        // Cần đảm bảo là minigame không bị giữ lại trạng thái từ lần trước
+        isGameActive = true;
     }
 
     void HandleFishingBar()
     {
-        // Điều khiển thanh câu bằng phím Q và E
         if (Input.GetKey(KeyCode.Q))
         {
             isPlayerControlling = true;
@@ -78,7 +82,6 @@ public class FishingMinigame : MonoBehaviour
             isPlayerControlling = false;
         }
 
-        // Giới hạn phạm vi di chuyển của thanh điều khiển
         float catchBarLeftLimit = -catchBar.rect.width / 2 + fishingBar.rect.width / 2;
         float catchBarRightLimit = catchBar.rect.width / 2 - fishingBar.rect.width / 2;
 
@@ -91,13 +94,18 @@ public class FishingMinigame : MonoBehaviour
             fishingBar.anchoredPosition = new Vector2(catchBarLeftLimit, fishingBar.anchoredPosition.y);
         }
 
-        // Nếu không điều khiển, thanh tự động di chuyển
         if (!isPlayerControlling)
         {
             fishingBar.anchoredPosition += new Vector2(fishingBarSpeed * Time.deltaTime, 0f);
 
-            if (fishingBar.anchoredPosition.x > catchBarRightLimit || fishingBar.anchoredPosition.x < catchBarLeftLimit)
+            if (fishingBar.anchoredPosition.x > catchBarRightLimit)
             {
+                fishingBar.anchoredPosition = new Vector2(catchBarRightLimit, fishingBar.anchoredPosition.y);
+                fishingBarSpeed = -fishingBarSpeed;
+            }
+            else if (fishingBar.anchoredPosition.x < catchBarLeftLimit)
+            {
+                fishingBar.anchoredPosition = new Vector2(catchBarLeftLimit, fishingBar.anchoredPosition.y);
                 fishingBarSpeed = -fishingBarSpeed;
             }
         }
@@ -105,18 +113,29 @@ public class FishingMinigame : MonoBehaviour
 
     void HandleSweetSpot()
     {
-        // Tăng dần tốc độ Sweet Spot
-        sweetSpotSpeed += sweetSpotSpeedIncreaseRate * Time.deltaTime;
-
         Vector2 position = sweetSpot.anchoredPosition;
-        position.x += sweetSpotSpeed * Time.deltaTime;
+
+        sweetSpotSpeed += sweetSpotSpeedIncreaseRate * Time.deltaTime;
 
         float catchBarLeftLimit = -catchBar.rect.width / 2 + sweetSpot.rect.width / 2;
         float catchBarRightLimit = catchBar.rect.width / 2 - sweetSpot.rect.width / 2;
 
-        if (position.x > catchBarRightLimit || position.x < catchBarLeftLimit)
+        if (Random.Range(0f, 1f) < 0.01f)
         {
             sweetSpotSpeed = -sweetSpotSpeed;
+        }
+
+        position.x += sweetSpotSpeed * Time.deltaTime;
+
+        if (position.x > catchBarRightLimit)
+        {
+            position.x = catchBarRightLimit;
+            sweetSpotSpeed = -Mathf.Abs(sweetSpotSpeed);
+        }
+        else if (position.x < catchBarLeftLimit)
+        {
+            position.x = catchBarLeftLimit;
+            sweetSpotSpeed = Mathf.Abs(sweetSpotSpeed);
         }
 
         sweetSpot.anchoredPosition = position;
@@ -141,39 +160,41 @@ public class FishingMinigame : MonoBehaviour
             if (progressBar.value >= progressBar.maxValue)
             {
                 Debug.Log("Fishing Completed!");
-                ShowResult(true);
+
+                minigameUI.SetActive(false);
+                fishingResultUI.SetActive(true);
+
+                // Chọn ngẫu nhiên ảnh thắng
+                DisplayRandomWinImage();
+
+                fishingFailImage.gameObject.SetActive(false);
+                retryButton.gameObject.SetActive(true);  // Hiển thị nút Retry sau khi thắng
+                isGameActive = false;  // Ngừng trò chơi sau khi thắng
             }
         }
         else
         {
             progressBar.value -= progressBarSpeed * Time.deltaTime;
 
+            if (progressBar.value < progressBar.minValue)
+            {
+                progressBar.value = progressBar.minValue;
+            }
+
             if (progressBar.value <= progressBar.minValue)
             {
                 Debug.Log("Fishing Failed!");
-                ShowResult(false);
+
+                minigameUI.SetActive(false);
+                fishingResultUI.SetActive(true);
+
+                fishingFailImage.gameObject.SetActive(true);
+                fishingWinImage.gameObject.SetActive(false);
+
+                retryButton.gameObject.SetActive(true);  // Hiển thị nút Retry sau khi thua
+                isGameActive = false;  // Ngừng trò chơi sau khi thua
             }
         }
-    }
-
-    void ShowResult(bool isWin)
-    {
-        minigameUI.SetActive(false);
-        fishingResultUI.SetActive(true);
-
-        if (isWin)
-        {
-            DisplayRandomWinImage();
-            fishingFailImage.gameObject.SetActive(false);
-        }
-        else
-        {
-            fishingFailImage.gameObject.SetActive(true);
-            fishingWinImage.gameObject.SetActive(false);
-        }
-
-        isGameActive = false; // Dừng trò chơi
-        StartCoroutine(HideResultAfterDelay());
     }
 
     void DisplayRandomWinImage()
@@ -182,19 +203,36 @@ public class FishingMinigame : MonoBehaviour
         {
             int randomIndex = Random.Range(0, fishingWinImages.Length);
             fishingWinImage.sprite = fishingWinImages[randomIndex];
-            fishingWinImage.gameObject.SetActive(true);
+            fishingWinImage.gameObject.SetActive(true);  // Hiển thị ảnh thắng
         }
     }
 
-    IEnumerator HideResultAfterDelay()
+    void RetryMinigame()
     {
-        yield return new WaitForSeconds(3f);
+        // Ẩn nút Retry ngay lập tức sau khi bấm
+        retryButton.gameObject.SetActive(false);
 
-        // Ẩn kết quả sau 3 giây
+        // Ẩn kết quả thắng/thua
         fishingResultUI.SetActive(false);
         fishingWinImage.gameObject.SetActive(false);
         fishingFailImage.gameObject.SetActive(false);
 
-        Debug.Log("Minigame Ended.");
+        // Reset lại trạng thái minigame
+        progressBar.value = progressBar.minValue; // Đặt lại giá trị thanh tiến trình
+        isGameActive = true;  // Đảm bảo trò chơi có thể bắt đầu lại
+
+        // Bạn có thể thêm các thao tác khác nếu cần
+    }
+
+    IEnumerator ShowMinigameAfterDelay()
+    {
+        // Đợi 1 frame hoặc thời gian đủ dài
+        yield return null;  // Đợi đến frame kế tiếp
+
+        // Hiển thị lại Minigame UI sau khi đã ẩn kết quả và nút retry
+        minigameUI.SetActive(true);
+
+        // Khởi động lại trò chơi và cho phép điều khiển lại
+        isGameActive = true;
     }
 }
