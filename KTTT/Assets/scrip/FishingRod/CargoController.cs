@@ -29,7 +29,7 @@ public class CargoController : MonoBehaviour
     private IEnumerator DelayedDebugLog()
     {
         // Thời gian chờ ngẫu nhiên từ 1 đến 5 giây
-        float delayTime = Random.Range(1f, 5f);
+        float delayTime = Random.Range(1f, 10f);
         yield return new WaitForSeconds(delayTime);
 
         // Kiểm tra nếu đối tượng vẫn trong vùng fishing trước khi kích hoạt minigame

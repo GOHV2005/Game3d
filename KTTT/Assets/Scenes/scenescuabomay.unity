@@ -457,7 +457,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: -876546973899608171, guid: 30fa68ce467463643a86b839ca0eb195, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1561,14 +1561,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 586193967}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.021600125, z: -0, w: 0.9997667}
+  m_LocalRotation: {x: -0, y: 0.017933283, z: -0, w: 0.9998392}
   m_LocalPosition: {x: -13.21, y: 2.37, z: -18.14}
   m_LocalScale: {x: 3.176166, y: 3.176166, z: 3.176166}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1545999924}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: -2.475, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 2.055, z: 0}
 --- !u!1 &592440751
 GameObject:
   m_ObjectHideFlags: 0
@@ -1676,8 +1676,8 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 266835261}
-  - {fileID: 723088889}
   - {fileID: 818479980}
+  - {fileID: 723088889}
   m_Father: {fileID: 370899458}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &662758215
@@ -1794,7 +1794,7 @@ MonoBehaviour:
   catchBar: {fileID: 266835261}
   sweetSpot: {fileID: 1766510336}
   progressBar: {fileID: 818479981}
-  fishingBarSpeed: 150
+  fishingBarSpeed: 200
   sweetSpotSpeed: 100
   sweetSpotSpeedIncreaseRate: 5
   minigameUI: {fileID: 594287448}
@@ -1802,6 +1802,10 @@ MonoBehaviour:
   fishingWinImage: {fileID: 484730793}
   fishingFailImage: {fileID: 940072636}
   retryButton: {fileID: 977133847}
+  fishingWinImages:
+  - {fileID: -841079733, guid: f31a6db4491f15b40bc137001f992e0a, type: 3}
+  - {fileID: 20789599, guid: de8f7e1ed081b8b4ab4a39ba8243337f, type: 3}
+  isGameActive: 1
 --- !u!1 &742432524
 GameObject:
   m_ObjectHideFlags: 0
@@ -3780,8 +3784,8 @@ Transform:
   m_GameObject: {fileID: 1518101767}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -12.08, y: 6.87, z: -8.83}
-  m_LocalScale: {x: 0.05, y: 0.5, z: 0.05}
+  m_LocalPosition: {x: -12.08, y: 8.403, z: -8.7534}
+  m_LocalScale: {x: 0.20331258, y: 2.0331259, z: 0.20331258}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 383831088}
@@ -3834,7 +3838,7 @@ MonoBehaviour:
     floater: {fileID: 383831088}
   - floatingPower: 150
     floater: {fileID: 811024367}
-  - floatingPower: 20
+  - floatingPower: -2
     floater: {fileID: 1877231642}
   waterObject: {fileID: 969077431}
   underWaterDrag: 3

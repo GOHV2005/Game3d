@@ -22,6 +22,10 @@ public class FishingMinigame : MonoBehaviour
     public Image fishingFailImage;
     public Button retryButton;
 
+    // Thêm một mảng ảnh để hiển thị khi thắng
+    public Sprite[] fishingWinImages; // Mảng ảnh thắng
+    private Image currentWinImage; // Biến để lưu ảnh thắng hiện tại
+
     // Các biến điều khiển
     private bool isFishingBarInSweetSpot = false;
     private bool isPlayerControlling = false;
@@ -160,9 +164,10 @@ public class FishingMinigame : MonoBehaviour
                 minigameUI.SetActive(false);
                 fishingResultUI.SetActive(true);
 
-                fishingWinImage.gameObject.SetActive(true);
-                fishingFailImage.gameObject.SetActive(false);
+                // Chọn ngẫu nhiên ảnh thắng
+                DisplayRandomWinImage();
 
+                fishingFailImage.gameObject.SetActive(false);
                 retryButton.gameObject.SetActive(true);  // Hiển thị nút Retry sau khi thắng
                 isGameActive = false;  // Ngừng trò chơi sau khi thắng
             }
@@ -192,6 +197,16 @@ public class FishingMinigame : MonoBehaviour
         }
     }
 
+    void DisplayRandomWinImage()
+    {
+        if (fishingWinImages.Length > 0)
+        {
+            int randomIndex = Random.Range(0, fishingWinImages.Length);
+            fishingWinImage.sprite = fishingWinImages[randomIndex];
+            fishingWinImage.gameObject.SetActive(true);  // Hiển thị ảnh thắng
+        }
+    }
+
     void RetryMinigame()
     {
         // Ẩn nút Retry ngay lập tức sau khi bấm
@@ -209,7 +224,6 @@ public class FishingMinigame : MonoBehaviour
         // Bạn có thể thêm các thao tác khác nếu cần
     }
 
-
     IEnumerator ShowMinigameAfterDelay()
     {
         // Đợi 1 frame hoặc thời gian đủ dài
@@ -221,5 +235,4 @@ public class FishingMinigame : MonoBehaviour
         // Khởi động lại trò chơi và cho phép điều khiển lại
         isGameActive = true;
     }
-
 }

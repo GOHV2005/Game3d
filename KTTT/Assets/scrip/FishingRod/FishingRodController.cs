@@ -22,7 +22,7 @@ public class FishingRodController : MonoBehaviour
     //Mass of what the rope is carrying
     private float loadMass = 3f;
     //How fast we can add more/less rope
-    float winchSpeed = 5f;
+    float winchSpeed = 2f;
 
     [SerializeField] private bool isFloaterFishingRod = false;
 
