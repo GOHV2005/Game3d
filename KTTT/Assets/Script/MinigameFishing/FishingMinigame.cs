@@ -9,6 +9,7 @@ public class FishingMinigame : MonoBehaviour
     public RectTransform catchBar;
     public RectTransform sweetSpot;
     public Slider progressBar;
+    public static int fishCaught = 0;
 
     // Các tham số điều chỉnh tốc độ
     public float fishingBarSpeed = 200f;
@@ -67,12 +68,12 @@ public class FishingMinigame : MonoBehaviour
 
     void HandleFishingBar()
     {
-        if (Input.GetKey(KeyCode.Q))
+        if (Input.GetKey(KeyCode.E))
         {
             isPlayerControlling = true;
             fishingBar.anchoredPosition += new Vector2(-fishingBarSpeed * Time.deltaTime, 0f);
         }
-        else if (Input.GetKey(KeyCode.E))
+        else if (Input.GetKey(KeyCode.Q))
         {
             isPlayerControlling = true;
             fishingBar.anchoredPosition += new Vector2(fishingBarSpeed * Time.deltaTime, 0f);
@@ -163,7 +164,7 @@ public class FishingMinigame : MonoBehaviour
 
                 minigameUI.SetActive(false);
                 fishingResultUI.SetActive(true);
-
+                fishCaught++;
                 // Chọn ngẫu nhiên ảnh thắng
                 DisplayRandomWinImage();
 
